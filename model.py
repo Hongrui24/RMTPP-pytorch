@@ -11,7 +11,6 @@ class RMTPP(nn.Module):
         self.embed = nn.Linear(in_features=self.n_class, out_features=1)
         self.rnn = nn.RNN(input_size=2, hidden_size=config.hid_dim,
                           batch_first=True, num_layers=config.n_layers,bidirectional=False, nonlinearity='relu')
-        
         self.event_linear = nn.Linear(in_features=config.hid_dim, out_features=self.n_class, bias=True)
         self.time_linear = nn.Linear(in_features=config.hid_dim, out_features=1, bias=True)
 
@@ -47,14 +46,13 @@ class RMTPP(nn.Module):
         time_tensor, event_tensor = batch
         time_tensor.to(device)
         event_tensor.to(device)
-        time_input, time_duration = time_tensor[:, :-1], time_tensor[:,1:]-time_tensor[:,:-1]
-        event_input, event_target = event_tensor[:, :-1], event_tensor[:, -1]
+        time_input, time_duration = time_tensor[:, :-1], time_tensor[:, 1:]-time_tensor[:, :-1]
+        event_input, event_target = event_tensor[:, :-1], event_tensor[:, 1:]
         event_out, time_out = self.forward(time_input, event_input)
-        event_out = event_out.reshape(-1, self.n_class)[-1:]
-        loss1 = self.event_criterion(event_out, event_target)
-        time_out = time_out.reshape(-1,1)
-        loss2 = self.time_criterion(time_out[-1:], time_duration[:,-1:])
-        loss =  loss1 + loss2
+        event_out = event_out.reshape(-1, self.n_class)
+        loss1 = self.event_criterion(event_out, event_target.view(-1))
+        loss2 = self.time_criterion(time_out.view(-1), time_duration.view(-1))
+        loss = loss1 + loss2
         loss.backward()
         self.optimizer.step()
         self.optimizer.zero_grad()

@@ -88,11 +88,20 @@ if __name__ == "__main__":
         model = model.RMTPP(config, device)
 
     for epc in range(config.epochs):
+        c = list(zip(time_train, type_train))
+        random.shuffle(c)
+        time_train, type_train = zip(*c)
+        loss_total = 0
+        loss_type = 0
+        loss_time = 0
         for index in range(len(time_train)):
             batch = (torch.tensor([time_train[index]], dtype=torch.float32), torch.tensor([type_train[index]]))
             loss, loss1, loss2 = model.train_batch(batch, device)
+            loss_total += loss
+            loss_type += loss1
+            loss_time += loss2
         print("In epochs {0}, total loss: {1}, type loss: {2}, time loss: {3}".format(
-            epc, loss, loss1, loss2
+            epc, loss_total/len(time_train), loss_type/len(time_train), loss_time/len(time_train)
         ))
         print("saving model")
         torch.save(model, "model.pt")

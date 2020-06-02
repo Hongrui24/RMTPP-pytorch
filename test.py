@@ -37,6 +37,9 @@ def equation(time_var, time_cif, start_time, w, b):
                                  (np.exp(time_cif+b)-np.exp(time_cif+w*(time_var-start_time)+b))/w)
     return time_guess
 
+def intensities(time_var, time_cif, start_time, w, b):
+    ints = np.exp(time_cif+w*(time_var-start_time)+b)
+    return ints
 
 if __name__ == "__main__":
     parser = ArgumentParser()
@@ -72,6 +75,7 @@ if __name__ == "__main__":
     number = config.pre_test_numb + 1
     time = time_test[:number]
     types = type_test[:number]
+    intensity = []
     for i in range(config.length_to_predict):
         batch = (torch.tensor([time], dtype=torch.float32), torch.tensor([types]))
         event_pred, time_cif = model.predict(batch, device)
@@ -80,6 +84,8 @@ if __name__ == "__main__":
         intensity_b = model.intensity_b.item()
         func = lambda x: equation(x, time_cif, time[-1], intensity_w, intensity_b)
         time_pred = integrate.quad(func,time[-1], np.inf)
+        inten = intensities(time_pred[0], time_cif, time[-1], intensity_w, intensity_b)
+        intensity.append(inten)
         time.append(time_pred[0])
         types.append(event_pred)
     print("predict_time: ",time[number:])
@@ -108,7 +114,11 @@ if __name__ == "__main__":
     plt.plot(range(100),difference)
     plt.ylim(top=0.22, bottom=0)
     plt.savefig("time_duration.png")
-    print(difference)
+    plt.plot(range(100),difference)
+    plt.ylim(top=0.22, bottom=0)
+    plt.savefig("intensity.png")
+    print("Time_duration: ",difference)
+    print("Intensity: ", intensity)
 
 
     

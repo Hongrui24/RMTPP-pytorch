@@ -7,7 +7,7 @@ from sklearn.metrics import mean_squared_error
 from math import sqrt
 import matplotlib.pyplot as plt
 
-def data_process(file_name, seq_len):
+def data_process(file_name):
     f = open(file_name,'r')
     time_data = []
     file_data = f.readlines()
@@ -22,14 +22,12 @@ def data_process(file_name, seq_len):
     for i in range(len(time_data)):
         line = time_data[i]
         time_data[i] = []
-        end = seq_len
+        end = 1
         while end <= len(line):
-            start = end-seq_len
-            time_data[i].append(line[start:end])
+            time_data[i].append(line[0:end])
             end += 1
     time_data = np.array(time_data)
-    time_duration = np.diff(time_data, axis=-1, prepend=time_data[:,:,:1])
-    return time_data, time_duration
+    return time_data
 
 
 def generate_type(time_data):
@@ -61,9 +59,7 @@ if __name__ == "__main__":
                         type=bool, default=True)
     parser.add_argument("--test_start",
                         help="Start of the prediction. For real data, we only predict the last one at -1",
-                        type=int, default=57)
-    parser.add_argument("--seq_len", 
-                        help="Sequence length. This should be the same in training.", type=int, default=10)
+                        type=int, default=56)
     parser.add_argument("--data", type=str, default='Hawkes',
                         help="Hawkes, self-correcting are choice. Must be the same with the training input")
     config = parser.parse_args()
@@ -79,7 +75,7 @@ if __name__ == "__main__":
 
     data = "data/" + config.data + "/time-test.txt"
 
-    time_test, time_duration = data_process(data, config.seq_len)
+    time_test = data_process(data)
     if config.generate_type:
         type_test = generate_type(time_test)
     else:
@@ -88,7 +84,7 @@ if __name__ == "__main__":
     print("testing file processed.")
 
     if config.generate_type:
-        time_duration = time_duration[0]
+        time_test = time_test[0]
         type_test = type_test[0]
     else:
         time_duration = time_duration[:,-1]
@@ -99,25 +95,30 @@ if __name__ == "__main__":
     if config.test_start == -1:
         index = 0
     else:
-        index = config.test_start - config.seq_len
+        index = config.test_start
 
 
 
-    actual_duration = time_duration[index:,-1]
-    batch = (torch.tensor(time_duration[index:], dtype=torch.float32), torch.tensor(type_test[index:]))
-    event_pred, time_cif = model.predict(batch, device)
-    time_cif = time_cif.tolist()
-    intensity_w = model.intensity_w.item()
-    intensity_b = model.intensity_b.item()
+    actual_duration = []
     duration_pred = []
     intensity_pred = []
-    for i in range(len(time_cif)):
-        func = lambda x: equation(x, time_cif[i][0], intensity_w, intensity_b)
+    event_pred = []
+    while index < len(time_test):
+        time_data = np.diff(time_test[index], axis=-1, prepend=time_test[0])
+        actual_duration.append(time_data[-1])
+        batch = (torch.tensor([time_data], dtype=torch.float32), torch.tensor([type_test[index]]))
+        event, time_cif = model.predict(batch, device)
+        time_cif = time_cif.item()
+        intensity_w = model.intensity_w.item()
+        intensity_b = model.intensity_b.item()
+        func = lambda x: equation(x, time_cif, intensity_w, intensity_b)
         duration = integrate.quad(func,0, np.inf)[0]
         duration_pred.append(duration)
-        inten = intensities(duration, time_cif[i][0], intensity_w, intensity_b)
+        inten = intensities(duration, time_cif, intensity_w, intensity_b)
         intensity_pred.append(inten)
-      
+        event_pred.append(event[0])
+        index += 1
+    
     print("prediction on duration: ", duration_pred)
     print("actual duration: ", actual_duration)
     print("prediction on types: ", event_pred)

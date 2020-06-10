@@ -6,26 +6,7 @@ import random
 import numpy as np
 
 
-def evaluate(model, config):
-    model.eval()
-    time_test = data_process('time-test.txt')
-    if config.generate_type:
-        type_test = generate_type(time_test)
-    else:
-        type_test = data_process("event_test.txt")
-    loss_total = 0
-    loss_type = 0
-    loss_time = 0
-    for index in range(len(time_test)):
-            batch = (torch.tensor([time_test[index]], dtype=torch.float32), torch.tensor([type_test[index]]))
-            loss, loss1, loss2 = model.train_batch(batch, device)
-            loss_total += loss
-            loss_type += loss1
-            loss_time += loss2
-    loss_total /= len(time_test)
-    loss_type /= len(time_test)
-    loss_time /= len(time_test)    
-    print("During evaluation, the losses are {}, {}, {}".format(loss_total, loss_type, loss_time))
+
 
 def data_process(file_name, seq_len):
     f = open(file_name,'r')
@@ -113,9 +94,9 @@ if __name__ == "__main__":
         model = torch.load("model.pt")
     else:
         model = model.RMTPP(config, device)
-
-    for parameter in model.parameters():
-        parameter.data.fill_(random.uniform(0.4,0.5))
+        for parameter in model.parameters():
+            parameter.data.fill_(random.uniform(0.4, 0.5))
+    
 
     """Trianing process"""
     for epc in range(config.epochs):
@@ -127,7 +108,7 @@ if __name__ == "__main__":
         loss_time = 0
         for index in range(len(time_train)):
             batch = (torch.tensor(time_duration[index], dtype=torch.float32), torch.tensor(type_data[index]))
-            loss, loss1, loss2 = model.train_batch(batch, device)
+            loss, loss1, loss2 = model.train(batch, device)
             loss_total += loss
             loss_type += loss1
             loss_time += loss2
@@ -136,5 +117,4 @@ if __name__ == "__main__":
         ))
         print("saving model")
         torch.save(model, "model.pt")
-        #evaluate(model, config)
     print("training done!")

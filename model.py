@@ -44,7 +44,7 @@ class RMTPP(nn.Module):
         else:
             return torch.optim.Adam(self.parameters(), lr=lr)
 
-    def train_batch(self, batch, device):
+    def train(self, batch, device):
         time_tensor, event_tensor = batch
         time_tensor.to(device)
         event_tensor.to(device)

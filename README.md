@@ -43,10 +43,12 @@ Test on Hawkes:<br />
 ![Hawkes](https://user-images.githubusercontent.com/54515153/84570792-a630c800-ad5d-11ea-972e-a809f0865add.png)<br />
 Comparing to the results on the paper:
 ![Hawkes](https://user-images.githubusercontent.com/54515153/85622693-3c55cf80-b635-11ea-96c9-3d43b0526556.JPG)<br />
+<br /><br />
+Test on Self-correcting:<br />
 ![self-correcting](https://user-images.githubusercontent.com/54515153/84570795-a9c44f00-ad5d-11ea-9b71-30632793f9b4.png)<br />
 Comparing to the results on the paper:
 ![Self-correcting](https://user-images.githubusercontent.com/54515153/85622697-3d86fc80-b635-11ea-99f1-d6d5835e642c.JPG)
-Test on Self-correcting:<br />
+
 
 ### Acknowledgement
 The model is built by Hongrui Lyu, supervised by of Hyunouk Ko and Xiaoming Huo. This repository is built upon the model described in paper Du, Nan, et al. [“Recurrent Marked Temporal Point Processes.”](https://www.kdd.org/kdd2016/subtopic/view/recurrent-temporal-point-process). We also use a similar pytorch implementation by [Yunxuan Xiao](https://github.com/woshiyyya/ERPP-RMTPP) to debug the model. 
